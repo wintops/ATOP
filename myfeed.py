@@ -23,9 +23,10 @@ class FastDictReader(object):
 
     def _next_impl(self):
         # Skip empty rows.
-        row = six.next(self.reader)
-        while row == []:
-            row = six.next(self.reader)
+        row = next(self.reader)
+        print(row)
+        #while row == []:
+        #    row = six.next(self.reader)
 
         # Check that the row has the right number of columns.
     # assert len(self.__fieldNames) == len(row), "Expected columns: %s. Actual columns: %s" % (
@@ -39,9 +40,12 @@ class FastDictReader(object):
         # Copy the row values into the dict.
         try:
             for i in xrange(len(self.__fieldNames)):
+                
                 self.__dict[self.__fieldNames[i]] = row[i]
         except:
             self.__dict = {}
+        
+       
 
         return self.__dict
 
@@ -81,7 +85,7 @@ class BarFeed(membf.BarFeed):
     def setBarFilter(self, barFilter):
         self.__barFilter = barFilter
 
-    def addBarsFromCSV(self, instrument, path, rowParser, skipMalformedBars=False):
+    def addBarsFromCSV(self, instrument, symbol,path, rowParser, skipMalformedBars=False):
         def parse_bar_skip_malformed(row):
             ret = None
             try:
@@ -97,11 +101,14 @@ class BarFeed(membf.BarFeed):
 
         # Load the csv file
         loadedBars = []
-        reader = FastDictReader(open(path, "r"), fieldnames=rowParser.getFieldNames(), delimiter=rowParser.getDelimiter())  #
+        reader = csv.reader(open(path+symbol+".txt", "r",newline='',))
+        #reader = FastDictReader(open(path+symbol+".txt", "r",newline='',), fieldnames=rowParser.getFieldNames(), delimiter=rowParser.getDelimiter())  #
         for row in reader:
-            bar_ = parse_bar(row)
-            if bar_ is not None and (self.__barFilter is None or self.__barFilter.includeBar(bar_)):
-                loadedBars.append(bar_)
+            #print(row)
+            if len(row)>5:
+                bar_ = parse_bar(row)
+                if bar_ is not None and (self.__barFilter is None or self.__barFilter.includeBar(bar_)):
+                    loadedBars.append(bar_)
 
         self.addBarsFromSequence(instrument, loadedBars)
         #print self.__bars
@@ -155,24 +162,24 @@ class GenericRowParser(RowParser):
         return ","
 
     def parseBar(self, csvRowDict):
-        dateTime = self._parseDate(csvRowDict[self.__dateTimeColName])
-        open_ = float(csvRowDict[self.__openColName])
-        high = float(csvRowDict[self.__highColName])
-        low = float(csvRowDict[self.__lowColName])
-        close = float(csvRowDict[self.__closeColName])
-        volume = float(csvRowDict[self.__volumeColName])
+        dateTime = self._parseDate(csvRowDict[0])
+        open_ = float(csvRowDict[1])
+        high = float(csvRowDict[2])
+        low = float(csvRowDict[3])
+        close = float(csvRowDict[4])
+        volume = float(csvRowDict[5])
         adjClose = None
-        if self.__adjCloseColName is not None:
-            adjCloseValue = csvRowDict.get(self.__adjCloseColName, "")
-            if len(adjCloseValue) > 0:
-                adjClose = float(adjCloseValue)
-                self.__haveAdjClose = True
+        # if self.__adjCloseColName is not None:
+        #     adjCloseValue = csvRowDict.get(self.__adjCloseColName, "")
+        #     if len(adjCloseValue) > 0:
+        #         adjClose = float(adjCloseValue)
+        #         self.__haveAdjClose = True
 
         # Process extra columns.
         extra = {}
-        for k, v in six.iteritems(csvRowDict):
-            if k not in self.__columnNames.values():
-                extra[k] = csvutils.float_or_string(v)
+        # for k, v in six.iteritems(csvRowDict):
+        #     if k not in self.__columnNames.values():
+        #         extra[k] = csvutils.float_or_string(v)
 
         return self.__barClass(
             dateTime, open_, high, low, close, volume, adjClose, self.__frequency, extra=extra
@@ -246,7 +253,11 @@ class GenericBarFeed(BarFeed):
     def setBarClass(self, barClass):
         self.__barClass = barClass
 
-    def addBarsFromCSV(self, instrument, path, timezone=None, skipMalformedBars=False):
+    def addBars(self, instrument, symbol,path, timezone=None, skipMalformedBars=False):
+        self.addBarsFromCSV(instrument, symbol,path, timezone, skipMalformedBars)
+
+
+    def addBarsFromCSV(self, instrument,symbol, path, timezone=None, skipMalformedBars=False):
         """Loads bars for a given instrument from a CSV formatted file.
         The instrument gets registered in the bar feed.
 
@@ -268,7 +279,7 @@ class GenericBarFeed(BarFeed):
             timezone, self.__barClass
         )
 
-        super(GenericBarFeed, self).addBarsFromCSV(instrument, path, rowParser, skipMalformedBars=skipMalformedBars)
+        super(GenericBarFeed, self).addBarsFromCSV(instrument, symbol,path, rowParser, skipMalformedBars=skipMalformedBars)
 
         if rowParser.barsHaveAdjClose():
             self.__haveAdjClose = True
