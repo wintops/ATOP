@@ -2,9 +2,14 @@
 
 ## trading tools
 
-hfeed.py   深沪A股数据接口 (通达信高级导出历史数据文本格式) 
+[gekko](https://github.com/askmike/gekko)
+gekko_cnstock Gekko 深沪A股数据接口
+
+
 
  [pyalgotrade](https://github.com/gbeced/pyalgotrade) 应用案例 python 2/3 
+ 
+ hfeed.py   深沪A股数据接口 (通达信高级导出历史数据文本格式) 
  
 myfeed.py
 
