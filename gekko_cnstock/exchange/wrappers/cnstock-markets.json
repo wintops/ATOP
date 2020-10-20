@@ -1,0 +1,21 @@
+{
+  "assets": [
+    "STOCK"
+  ],
+  "currencies": [
+    "RMB"
+  ],
+  "markets": [
+    {
+      "pair": [
+        "RMB",
+        "STOCK"
+      ],
+      "minimalOrder": {
+        "amount": 0.1,
+        "price": 0.00001,
+        "order": 1
+      }
+    }
+]
+}
